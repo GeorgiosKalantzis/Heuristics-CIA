@@ -6,6 +6,8 @@ Feature construction
 import os, json
 import pandas as pd
 import math
+from sklearn.metrics import  r2_score
+import numpy as np
 
 # Read the inital data
 df1 = pd.read_csv('swipes.csv', header = 0)
@@ -15,7 +17,7 @@ path_to_json = 'rawData/'
 json_files = [pos_json for pos_json in os.listdir(path_to_json)]
 
 
-
+# Features to be computed
 start_x = []
 start_y = []
 stop_x  = []
@@ -24,6 +26,7 @@ median_vel_3fpts = []
 median_vel_3lpts = []
 mid_stroke_area = []
 angular_dispersion = []
+poly_cof_determination = []
 
 for i in range(len(json_files)):
     
@@ -41,7 +44,61 @@ for i in range(len(json_files)):
         median_vel_3lpts.append(math.nan)
         mid_stroke_area.append(math.nan)
         angular_dispersion.append(math.nan)
+        poly_cof_determination.append(math.nan)
         continue
+    
+    # Assign nan values to swipes with more than 11 points, later discard them as outliers       
+    if(len(data) > 11):
+        start_x.append(math.nan)
+        start_y.append(math.nan)
+        stop_x.append(math.nan)
+        stop_y.append(math.nan)
+        median_vel_3fpts.append(math.nan)
+        median_vel_3lpts.append(math.nan)
+        mid_stroke_area.append(math.nan)
+        angular_dispersion.append(math.nan)
+        poly_cof_determination.append(math.nan)
+        continue
+    
+    # Find the direction of this swipe 
+    swipeID = os.path.splitext(json_files[i])[0]
+    
+    # Direction based on swipe id
+    direction = df1['direction'][df1.index[df1['id'] == swipeID].tolist()].tolist()
+    
+    # Fit the right polynomial based on swipe's direction along x axis
+    x = [data[-1]['x0']]
+    y = [data[-1]['y0']]
+    
+    if len(direction) != 1 :
+        poly_cof_determination.append(math.nan)
+    else:
+    
+        if (direction[0] == 'right' or direction[0] == 'left'):
+            
+            for k in range(len(data)):
+                x.append(data[k]['moveX'])
+                y.append(data[k]['moveY'])
+            
+            model = np.poly1d(np.polyfit(x, y, 2))
+            
+            r2 = r2_score(y, model(x))
+            
+            poly_cof_determination.append(r2)
+            
+        # Reverse x and y based on the direction
+        if (direction[0] == 'up' or direction[0] == 'down'):
+            
+            for k in range(len(data)):
+                x.append(data[k]['moveX'])
+                y.append(data[k]['moveY'])
+                
+            model = np.poly1d(np.polyfit(y, x, 2))
+            
+            r2 = r2_score(x, model(y))
+    
+            poly_cof_determination.append(r2)
+        
         
      
     # start,stop -> x,y    
@@ -115,7 +172,8 @@ for i in json_files:
     
 
 features = {'id1':ids,'start_x': start_x,'start_y': start_y,'stop_x': stop_x,'stop_y': stop_y,'median_vel_3fpts': median_vel_3fpts ,
-            'median_vel_3lpts': median_vel_3lpts ,'mid_stroke_area':mid_stroke_area,'angular_dispersion':angular_dispersion }
+            'median_vel_3lpts': median_vel_3lpts ,'mid_stroke_area':mid_stroke_area,'angular_dispersion':angular_dispersion,
+            'poly_cof_determination':poly_cof_determination}
 
 
 

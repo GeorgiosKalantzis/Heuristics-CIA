@@ -2,74 +2,51 @@
 """
 Data exploration
 """
-import pandas as pd
-from sklearn.model_selection import train_test_split
-import numpy as np
+import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn.preprocessing import LabelEncoder
-from sklearn.feature_selection import mutual_info_classif
-from sklearn.feature_selection import SelectKBest
-from sklearn.model_selection import train_test_split
-from sklearn.ensemble import RandomForestClassifier
-from sklearn import svm
-from sklearn.linear_model import LogisticRegression
-from sklearn.preprocessing import StandardScaler
-from sklearn.multiclass import OneVsRestClassifier
-from sklearn.svm import SVC
-from sklearn.cluster import DBSCAN
 
 
-data = pd.read_csv('swipes.csv', header = 0)
+# HEATMAP
 
-# Move target playerID to the first column for easier manipulation
-player = data['playerID']
-data.drop(labels=['playerID'], axis=1,inplace = True)
-data.insert(0, 'playerID', player)
+cols = ['deviceWidth', 'deviceHeight', 'direction',
+       'horizontalAcceleration', 'horizontalMeanPosition',
+       'horizontalTraceLength', 'traceCoefDetermination',
+       'traceMeanAbsoluteError', 'traceMeanSquaredError',
+       'traceMedianAbsoluteError', 'traceSlope', 'verticalAcceleration',
+       'verticalMeanPosition', 'verticalTraceLength', 'start_x', 'start_y',
+       'stop_x', 'stop_y', 'median_vel_3fpts', 'median_vel_3lpts',
+       'mid_stroke_area', 'angular_dispersion']
 
-# Drop swipe id
-data.drop(labels=['id'], axis=1,inplace = True)
+pp = sns.pairplot(data[cols], size=1.8, aspect=1.8,
+                  plot_kws=dict(edgecolor="k", linewidth=0.5),
+                  diag_kind="kde", diag_kws=dict(shade=True))
 
-
-# Drop information on users with only one swipe
-# Here oversampling is needed for these users
-index1 = data[data['playerID'] == 'y2opfq8'].index
-index2 = data[data['playerID'] == 'bh54lsq'].index
-index3 = data[data['playerID'] == 'lvrishm'].index
-
-data.drop(index1 , inplace=True)
-data.drop(index2 , inplace=True)
-data.drop(index3 , inplace=True)
+fig = pp.fig 
+fig.subplots_adjust(top=0.93, wspace=0.3)
 
 
-# creating instance of labelencoder
-labelencoder = LabelEncoder()
+# CORRELATION
 
-# Encoders for these features, in the future probably we will drop screen , deviceOS, userGender but not direction
-data['screen'] = labelencoder.fit_transform(data['screen'])
-data['deviceOS'] = labelencoder.fit_transform(data['deviceOS'])
-data['direction'] = labelencoder.fit_transform(data['direction'])
-data['userGender'] = labelencoder.fit_transform(data['userGender'])
+f, ax = plt.subplots(figsize=(10, 6))
+corr = data.corr()
+hm = sns.heatmap(round(corr,2), annot=True, ax=ax, cmap="coolwarm",fmt='.2f',
+                 linewidths=.05)
+f.subplots_adjust(top=0.93)
+t= f.suptitle(' Heatmap', fontsize=14)
 
-y = data.iloc[0:,0]
-x = data.iloc[0:,1:]
-# Standard scaling also for the encoded features
-x = StandardScaler().fit_transform(x)
 
-X_train, X_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state = 2020, stratify=y)   
 
-# One versus All svm classifier
-clf = OneVsRestClassifier(SVC(),n_jobs=-1).fit(X_train, y_train)
-prediction = clf.predict(X_test)
+# ENTROPY
 
-"""
 # Entropy with respect to tagrget
 importances = mutual_info_classif(x,y)
+
 feat_importances = pd.Series(importances, x.columns[0:len(x.columns)])
 feat_importances.plot(kind='barh', color='blue') #plot info gain of each features
 plt.show()
 
 # select the number of features you want to retain.
-select_k = 10 #whatever we want
+select_k = 20 #whatever we want
 
 # create the SelectKBest with the mutual info(info gain) strategy.
 selection = SelectKBest(mutual_info_classif, k=select_k).fit(x, y)
@@ -81,6 +58,3 @@ plt.show()
 # display the retained features.
 features = x.columns[selection.get_support()]
 print(features)
-"""
-
-
