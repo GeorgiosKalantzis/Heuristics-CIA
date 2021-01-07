@@ -109,6 +109,7 @@ for i in range(len(users)):
     accuracies.append(accuracy_score(y_test, pred))
     
     
+    """
     # Compute False Acceptance Rate and False Rejection Rate
     CM = confusion_matrix(y_test,pred)
 
@@ -120,6 +121,15 @@ for i in range(len(users)):
     FAR.append(FN/len(y_test[y_test == -1]))
     
     FRR.append(FP/len(y_test[y_test == 1]))
+    """
+    
+    predA = svm.predict(X_test[y_test == -1])
+    
+    FAR.append(len(predA[predA == 1])/len(predA))
+    
+    predU = svm.predict(X_test[y_test == 1])
+    
+    FRR.append(len(predU[predU == -1])/len(predU))
     
     
     y = data.iloc[0:,0].copy()
