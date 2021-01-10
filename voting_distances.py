@@ -87,7 +87,7 @@ for i in range(len(users)):
     maxdist=np.array([0.0 for x in range(len(models))])
 
     for j in range(len(models)):
-        models[j]=OneClassSVM(kernel='rbf', nu=outlier_prop, gamma=0.005*(j+1))
+        models[j]=OneClassSVM(kernel='rbf', nu=outlier_prop, gamma=0.01*(j+1))
         models[j].fit(X_train_user)
         d[j,:]=models[j].decision_function(X_test)
         t[j,:]=models[j].decision_function(X_train_user)
@@ -137,4 +137,4 @@ print(np.mean(FRR))
 #print(np.std(FAR))
 #print(np.std(FRR))
 
-
+Results:FAR=41%,FRR=21%
