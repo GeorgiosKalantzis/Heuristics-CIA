@@ -137,4 +137,4 @@ print(np.mean(FRR))
 #print(np.std(FAR))
 #print(np.std(FRR))
 
-Results:FAR=41%,FRR=21%
+Results:FAR=41% , FRR=21%
