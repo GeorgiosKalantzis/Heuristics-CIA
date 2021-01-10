@@ -68,7 +68,7 @@ FAR = []
 FRR = []
 
 # One-class classification for every user
-
+models=[0 for i in range(10)]
 for i in range(len(users)):
     print(i)
     y[y == users[i]] = 1
@@ -82,60 +82,28 @@ for i in range(len(users)):
     outlier_prop = len(X_train_user) / len(X_train_attacker)
 
     #Arrays to hold the distances of each sample
-    d=np.array([[0.0 for x in range(len(X_test))]for y in range(5)])
-    t=np.array([[0.0 for x in range(len(X_train_user))]for y in range(5)])
-    maxdist=np.array([0.0 for x in range(5)])
+    d=np.array([[0.0 for x in range(len(X_test))]for y in range(len(models))])
+    t=np.array([[0.0 for x in range(len(X_train_user))]for y in range(len(models))])
+    maxdist=np.array([0.0 for x in range(len(models))])
 
-    svm1 = OneClassSVM(kernel='rbf', nu=outlier_prop, gamma=0.01)
-    svm2 = OneClassSVM(kernel='rbf', nu=outlier_prop, gamma=0.02)
-    svm3 = OneClassSVM(kernel='rbf', nu=outlier_prop, gamma=0.03)
-    svm4 = OneClassSVM(kernel='rbf', nu=outlier_prop, gamma=0.04)
-    svm5 = OneClassSVM(kernel='rbf', nu=outlier_prop, gamma=0.05)
-
+    for j in range(len(models)):
+        models[j]=OneClassSVM(kernel='rbf', nu=outlier_prop, gamma=0.005*(j+1))
+        models[j].fit(X_train_user)
+        d[j,:]=models[j].decision_function(X_test)
+        t[j,:]=models[j].decision_function(X_train_user)
+        maxdist[j]=max(t[j,:])
     # Train on user's data
-    svm1.fit(X_train_user)
-    svm2.fit(X_train_user)
-    svm3.fit(X_train_user)
-    svm4.fit(X_train_user)
-    svm5.fit(X_train_user)
-
     # Predict on all data
-
-    d[0,:]=svm1.decision_function(X_test)
-    t[0,:]=svm1.decision_function(X_train_user)
-    maxdist[0]=max(t[0,:],key=abs)
-
-
-
-    d[1,:]=svm2.decision_function(X_test)
-    t[1,:]=svm2.decision_function(X_train_user)
-    maxdist[1] = max(t[1,:],key=abs)
-
-
-    d[2, :] = svm3.decision_function(X_test)
-    t[2, :] = svm3.decision_function(X_train_user)
-    maxdist[2] = max(t[2,:],key=abs)
-
-
-    d[3, :] = svm4.decision_function(X_test)
-    t[3, :] = svm4.decision_function(X_train_user)
-    maxdist[3] = max(t[3,:],key=abs)
-
-
-    d[4, :] = svm5.decision_function(X_test)
-    t[4, :] = svm5.decision_function(X_train_user)
-    maxdist[4] = max(t[4,:],key=abs)
-
 
     y_test = y_test.astype('int')
 
     #Combining the Decisions of models
     final_prediction = np.array([0 for x in range(len(y_test))])
-    cop = np.array([[0.0 for x in range(len(y_test))]for y in range(5)])
+    cop = np.array([[0.0 for x in range(len(y_test))]for y in range(len(models))])
     for w in range(len(y_test)):
 
 
-            for z in range(5):
+            for z in range(len(models)):
                 if d[z,w]< (-abs(maxdist[z])):
                     cop[z,w]=-1
                 elif d[z,w]> abs(maxdist[z]):
