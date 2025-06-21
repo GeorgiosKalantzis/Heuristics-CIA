@@ -10,3 +10,5 @@ from any continuous implicit authentication model, can exploit the sequential or
 system. Preliminary evaluation on several axes indicates
 that our approach can effectively improve any CIA model
 and achieve significantly better results.
+
+Publication available: https://ieeexplore.ieee.org/abstract/document/10007940
